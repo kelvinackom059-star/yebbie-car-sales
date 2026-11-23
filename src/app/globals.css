@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+/*
+  Yebbie design tokens.
+  Anything inside @theme becomes a Tailwind class:
+  --color-road  → bg-road, text-road, border-road
+  --font-sign   → font-sign
+*/
+@theme {
+  /* Colours sampled from Yebbie's logo and flyer */
+  --color-road: #121a15; /* night green-black — navbar, footer, dark buttons */
+  --color-road-dark: #1f2a23; /* hover shade for dark areas */
+  --color-marking: #dcb546; /* Yebbie gold, from the logo — main buttons, highlights */
+  --color-marking-dark: #c49d2f; /* hover shade for gold buttons */
+  --color-gold: var(--color-marking); /* logo text — same gold */
+  --color-ink: #121a15; /* main text */
+  --color-paper: #f7f8f5; /* page background */
+  --color-line: #e2e5e0; /* borders and dividers */
+  --color-muted: #59615b; /* secondary text */
+
+  --font-sans: var(--font-barlow);
+  --font-sign: var(--font-barlow-condensed);
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+/* Visible keyboard focus everywhere (accessibility) */
+:focus-visible {
+  outline: 3px solid var(--color-road);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px var(--color-marking);
+}

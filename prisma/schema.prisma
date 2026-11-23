@@ -1,0 +1,144 @@
+// Yebbie Car Sales — database schema
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// ─────────────────────────────────────────────
+// ENUMS — fixed lists of allowed values
+// ─────────────────────────────────────────────
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum CarStatus {
+  AVAILABLE
+  RESERVED // a buyer has paid a deposit / is finalising
+  SOLD
+  MAINTENANCE
+}
+
+enum BodyType {
+  SEDAN
+  SUV
+  HATCHBACK
+  PICKUP
+  VAN
+  COUPE
+  BUS
+}
+
+enum Transmission {
+  AUTOMATIC
+  MANUAL
+}
+
+enum FuelType {
+  PETROL
+  DIESEL
+  HYBRID
+  ELECTRIC
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+enum InquiryType {
+  PURCHASE
+  TEST_DRIVE
+  GENERAL
+}
+
+enum InquiryStatus {
+  NEW
+  CONTACTED
+  CLOSED
+}
+
+// ─────────────────────────────────────────────
+// MODELS — each one becomes a table
+// All money is stored in PESEWAS (GH₵ 1.00 = 100)
+// ─────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  phone        String
+  passwordHash String
+  role         Role     @default(CUSTOMER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  inquiries Inquiry[]
+}
+
+model Car {
+  id           String       @id @default(cuid())
+  make         String // e.g. Toyota
+  model        String // e.g. Corolla
+  year         Int
+  color        String
+  plateNumber  String?      @unique
+  bodyType     BodyType
+  transmission Transmission
+  fuelType     FuelType
+  seats        Int
+  mileage      Int // km
+  description  String?      @db.Text
+  status       CarStatus    @default(AVAILABLE)
+  featured     Boolean      @default(false)
+  salePrice    Int? // null = "Call for price"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  media     CarMedia[]
+  inquiries Inquiry[]
+
+  @@index([status])
+}
+
+model CarMedia {
+  id           String    @id @default(cuid())
+  carId        String
+  type         MediaType
+  url          String       @db.Text
+  publicId     String? // Cloudinary's ID for the file, needed to delete it
+  thumbnailUrl String?      @db.Text // preview frame for videos
+  position     Int       @default(0) // 0 = cover
+  createdAt    DateTime  @default(now())
+
+  car Car @relation(fields: [carId], references: [id], onDelete: Cascade)
+
+  @@index([carId, position])
+}
+
+model Inquiry {
+  id            String        @id @default(cuid())
+  carId         String?
+  userId        String? // optional — visitors can ask without an account
+  name          String
+  phone         String
+  email         String?
+  type          InquiryType
+  message       String        @db.Text
+  preferredDate DateTime? // for test drives
+  status        InquiryStatus @default(NEW)
+  createdAt     DateTime      @default(now())
+
+  car  Car?  @relation(fields: [carId], references: [id], onDelete: SetNull)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+}
